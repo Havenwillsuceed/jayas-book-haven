@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#8b5cf6">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Jaya's Book Haven">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Jaya's Book Haven</title>
+<style>
+  :root{
+    --bg:#fbf7ff; --card:rgba(255,255,255,.88); --ink:#29233a; --muted:#756d80;
+    --accent:#8b5cf6; --accent2:#ec4899; --gold:#f59e0b;
+    --line:#e9def5; --danger:#c84b4b;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;color:var(--ink);
+    font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    background:
+      radial-gradient(circle at 8% 8%, rgba(139,92,246,.18), transparent 28%),
+      radial-gradient(circle at 92% 18%, rgba(236,72,153,.14), transparent 25%),
+      linear-gradient(135deg,#fffaff 0%,#f5f0ff 52%,#fff8ed 100%);
+    min-height:100vh;
+  }
+  body:before{
+    content:"";position:fixed;inset:0;pointer-events:none;opacity:.22;
+    background-image:radial-gradient(#8b5cf6 1px,transparent 1px);
+    background-size:28px 28px;
+    mask-image:linear-gradient(to bottom,black,transparent 75%);
+  }
+  header{padding:38px 22px 18px;max-width:1100px;margin:auto}
+  h1{
+    margin:0 0 8px;font-size:clamp(32px,5vw,50px);letter-spacing:-1.5px;
+    background:linear-gradient(90deg,var(--accent),var(--accent2),var(--gold));
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .subtitle{color:var(--muted);margin:0;font-size:16px}
+  .subtitle:after{content:" ✨";color:var(--gold)}
+  main{max-width:1100px;margin:auto;padding:0 22px 50px}
+  .tabs{
+    position:sticky;top:0;z-index:20;display:flex;gap:8px;flex-wrap:wrap;
+    padding:10px 0 14px;margin:0 0 4px;
+    background:linear-gradient(to bottom,rgba(251,247,255,.96),rgba(251,247,255,.82),transparent);
+    backdrop-filter:blur(10px);
+  }
+  .tab{
+    background:rgba(255,255,255,.8);border:1px solid var(--line);
+    color:var(--muted);padding:10px 16px;border-radius:999px;
+    box-shadow:none;font-weight:800;
+  }
+  .tab.active{
+    color:white;border-color:transparent;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    box-shadow:0 7px 18px rgba(139,92,246,.22);
+  }
+  .tab-panel{display:none;animation:fadeIn .25s ease}
+  .tab-panel.active{display:block}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:18px 0}
+  .stat,.panel,.book-card{
+    background:var(--card);backdrop-filter:blur(12px);
+    border:1px solid var(--line);border-radius:20px;
+    box-shadow:0 10px 30px rgba(79,52,112,.08);
+  }
+  .stat{padding:20px;transition:transform .2s,box-shadow .2s}
+  .stat:hover{transform:translateY(-3px);box-shadow:0 14px 34px rgba(79,52,112,.13)}
+  .stat strong{display:block;font-size:32px}.stat span{color:var(--muted);font-size:14px}
+  .progress-wrap{margin-top:12px;background:#eee9e2;height:10px;border-radius:20px;overflow:hidden}
+  .progress{
+    height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2),var(--gold));
+    width:0%;transition:.5s cubic-bezier(.2,.8,.2,1);border-radius:20px;
+  }
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}
+  input,button{font:inherit}
+  input{flex:1;min-width:220px;padding:13px 15px;border:1px solid var(--line);border-radius:12px;background:white;outline:none}
+  input:focus{border-color:var(--accent)}
+  button{
+    border:0;border-radius:12px;padding:12px 16px;cursor:pointer;font-weight:800;
+    transition:transform .15s,box-shadow .15s,filter .15s
+  }
+  button:hover{transform:translateY(-1px)}
+  .primary{
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    color:white;box-shadow:0 7px 16px rgba(139,92,246,.22)
+  }
+  .primary:hover{filter:saturate(1.15);box-shadow:0 9px 20px rgba(139,92,246,.3)}
+  .secondary{background:white;border:1px solid var(--line);color:var(--ink)}
+  .danger{background:#fff0f0;color:var(--danger);border:1px solid #f0caca}
+  .panel{padding:18px;margin-top:18px}
+  .panel h2{margin:0 0 14px}
+  .books{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;margin-top:16px}
+  .book-card{
+    overflow:hidden;display:flex;flex-direction:column;
+    transition:transform .22s,box-shadow .22s
+  }
+  .book-card:hover{transform:translateY(-6px) rotate(-.3deg);box-shadow:0 16px 32px rgba(79,52,112,.14)}
+  .cover{
+    height:270px;background:linear-gradient(135deg,#eee5ff,#fff1f8);
+    display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px;
+    overflow:hidden
+  }
+  .cover img{width:100%;height:100%;object-fit:cover;transition:transform .3s}
+  .book-card:hover .cover img{transform:scale(1.035)}
+  .book-info{padding:15px}.book-info h3{margin:0 0 6px;font-size:18px}
+  .author{color:var(--muted);font-size:14px;margin-bottom:10px}
+  .meta{font-size:13px;color:var(--muted);margin-bottom:12px}
+  .actions{display:flex;gap:8px}.actions button{flex:1;padding:9px}
+  .empty{text-align:center;color:var(--muted);padding:35px}
+  .search-results{display:grid;gap:10px;margin-top:12px}
+  .result{
+    display:flex;gap:14px;align-items:center;padding:12px;border:1px solid var(--line);
+    border-radius:14px;background:rgba(255,255,255,.9);transition:transform .15s,box-shadow .15s
+  }
+  .result:hover{transform:translateX(3px);box-shadow:0 7px 18px rgba(79,52,112,.08)}
+  .result img{width:54px;height:78px;object-fit:cover;border-radius:6px;background:#eee}
+  .result-info{flex:1}.result-info strong{display:block}.result-info small{color:var(--muted)}
+  dialog{border:0;border-radius:20px;padding:0;max-width:650px;width:calc(100% - 30px);box-shadow:0 20px 60px rgba(0,0,0,.2)}
+  dialog::backdrop{background:rgba(20,15,10,.55)}
+  .modal{padding:24px}.modal-top{display:flex;gap:20px}.modal-cover{width:150px;min-width:150px;height:220px;background:#eee8df;border-radius:10px;overflow:hidden}
+  .modal-cover img{width:100%;height:100%;object-fit:cover}.modal h2{margin-top:0}.label{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:800}
+  .synopsis{line-height:1.6;color:#48423d}
+  .close{float:right;background:#f0ece6;padding:7px 10px}
+  @media(max-width:650px){.stats{grid-template-columns:1fr}.modal-top{flex-direction:column}.modal-cover{width:130px}}
+</style>
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
+<style id="highResCoverStyles">
+.book-cover img, .cover img, .book-card img, img.book-cover {
+  image-rendering: auto;
+  object-fit: cover;
+  object-position: center;
+}
+.book-cover, .cover, .book-card .cover {
+  overflow: hidden;
+}
+.book-cover img:hover, .cover img:hover {
+  transform: scale(1.015);
+  transition: transform .2s ease;
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>📚 Jaya's Book Haven</h1>
+  <p class="subtitle">Keep track of every book you own and work toward your 1,000-book goal.</p>
+</header>
+<main>
+  <nav class="tabs" aria-label="Book Haven sections">
+    <button class="tab active" onclick="switchTab('home',this)">🏠 Home</button>
+    <button class="tab" onclick="switchTab('add',this)">➕ Add Books</button>
+    <button class="tab" onclick="switchTab('catalog',this)">🔎 Search Catalog</button>
+    <button class="tab" onclick="switchTab('collection',this)">📚 My Books</button>
+  </nav>
+
+  <section id="home" class="tab-panel active">
+    <section class="stats">
+    <div class="stat"><strong id="count">0</strong><span>Books in your collection</span></div>
+    <div class="stat"><strong id="remaining">1,000</strong><span>Books until 1,000</span></div>
+    <div class="stat"><strong id="percent">0%</strong><span>Progress toward 1,000</span><div class="progress-wrap"><div id="progress" class="progress"></div></div></div>
+  </section>
+  </section>
+
+  <section id="add" class="tab-panel">
+  <section class="panel">
+    <h2>➕ Add a book to your haven</h2>
+    <div class="toolbar">
+      <button class="primary" onclick="startBookScanner()">📚 Scan a Book</button>
+      <button class="secondary" onclick="showManual()">✍️ Add Manually</button>
+      <button class="secondary" onclick="showTitleSearch()">🔎 Search by Title</button>
+    </div>
+    <div id="scannerPanel" style="display:none;margin-top:14px;padding:16px;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.75)">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+        <strong>📷 Scan the ISBN barcode</strong>
+        <button class="secondary" onclick="stopBookScanner()">Close</button>
+      </div>
+      <p style="color:var(--muted);font-size:14px">Point your camera at the barcode on the back of the book. You don't need to take or save a photo.</p>
+      <div id="reader" style="max-width:520px;margin:auto"></div>
+      <div id="scanStatus" style="text-align:center;color:var(--muted);margin-top:10px"></div>
+    </div>
+    <div id="titleSearchPanel" style="display:none;margin-top:14px">
+      <div class="toolbar">
+        <input id="search" placeholder="Type the book title or author..." autocomplete="off">
+        <button class="primary" onclick="searchBooks()">Search</button>
+      </div>
+    </div>
+    <div id="searchStatus"></div>
+    <div id="results" class="search-results"></div>
+  </section>
+  </section>
+
+
+  <section id="catalog" class="tab-panel">
+    <section class="panel">
+      <h2>🔎 Search Through the Catalog</h2>
+      <p style="color:var(--muted);margin-top:-5px">Search for a book to see its cover, title, author, publication date, and synopsis.</p>
+      <div class="toolbar">
+        <input id="catalogSearch" placeholder="Type a book title or author..." autocomplete="off">
+        <button class="primary" onclick="catalogSearchBooks()">Search</button>
+      </div>
+      <div id="catalogStatus" style="color:var(--muted)"></div>
+      <div id="catalogResults" class="books"></div>
+    </section>
+  </section>
+
+  <section id="collection" class="tab-panel">
+  <section class="panel">
+    <h2>📚 Your books</h2>
+    <div id="collection" class="books"></div>
+  </section>
+  </section>
+</main>
+
+<dialog id="detailsDialog">
+  <div class="modal">
+    <button class="close" onclick="detailsDialog.close()">✕</button>
+    <div id="details"></div>
+  </div>
+</dialog>
+
+<dialog id="manualDialog">
+  <form method="dialog" class="modal-form" onsubmit="return false">
+    <h2>✍️ Add a Book Manually</h2>
+    <p style="color:var(--muted)">Enter as much or as little information as you want.</p>
+    <label>Title<input id="manualTitle" placeholder="Book title"></label>
+    <label>Author<input id="manualAuthor" placeholder="Author"></label>
+    <label>Publication date<input id="manualYear" placeholder="Year or date"></label>
+    <label>ISBN<input id="manualISBN" placeholder="Optional ISBN"></label>
+    <label>Synopsis<textarea id="manualSynopsis" rows="5" placeholder="Write your own synopsis, or leave blank."></textarea></label>
+    <label>Genre<input id="manualGenre" placeholder="Optional genre"></label>
+    <label>Your notes<textarea id="manualNotes" rows="4" placeholder="Optional notes"></textarea></label>
+    <div class="actions">
+      <button class="secondary" type="button" onclick="manualDialog.close()">Cancel</button>
+      <button class="primary" type="button" onclick="saveManualBook()">Add to My Books</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+const KEY = "my1000books_v1";
+let books = JSON.parse(localStorage.getItem(KEY) || "[]");
+
+function save(){ localStorage.setItem(KEY, JSON.stringify(books)); render(); }
+function escapeHTML(s=""){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));}
+function cover(url, title){
+  return url ? `<img src="${url}" alt="Cover of ${escapeHTML(title)}" onerror="this.parentElement.innerHTML='📖'">` : "📖";
+}
+function render(){
+  const n=books.length, pct=Math.min(100,n/10);
+  document.getElementById("count").textContent=n.toLocaleString();
+  const subtitle=document.querySelector(".subtitle");
+  if(n>=1000) subtitle.textContent="🎉 1,000 BOOKS! Your bookshelf is officially legendary.";
+  else if(n>=500) subtitle.textContent="Halfway to 1,000! Your library is getting HUGE. ✨";
+  else if(n>=100) subtitle.textContent="100+ books! Now we're talking. 📚✨";
+  else subtitle.textContent="Keep adding your favorites and build your dream library. ✨";
+  document.getElementById("remaining").textContent=Math.max(0,1000-n).toLocaleString();
+  document.getElementById("percent").textContent=pct.toFixed(n>=1000?0:1)+"%";
+  document.getElementById("progress").style.width=pct+"%";
+  const c=document.getElementById("collection");
+  if(!n){c.innerHTML='<div class="empty">You haven’t added any books yet. Search for a book above to get started!</div>';return;}
+  c.innerHTML=books.map((b,i)=>`
+    <article class="book-card">
+      <div class="cover">${cover(b.cover,b.title)}</div>
+      <div class="book-info">
+        <h3>${escapeHTML(b.title)}</h3>
+        <div class="author">${escapeHTML(b.author || "Unknown author")}</div>
+        <div class="meta">${b.year ? "Published "+escapeHTML(b.year) : "Publication date unknown"}</div>
+        <div class="actions">
+          <button class="secondary" onclick="showDetails(${i})">View</button>
+          <button class="danger" onclick="removeBook(${i})">Remove</button>
+        </div>
+      </div>
+    </article>`).join("");
+}
+function isOwned(b){
+  return books.some(x => (b.key && x.key===b.key) || (b.title.toLowerCase()===b.title.toLowerCase() && b.author.toLowerCase()===x.author.toLowerCase()));
+}
+
+const manualDialog=document.getElementById('manualDialog');
+let bookScanner = null;
+let scannerRunning = false;
+
+
+function showManual(){
+  const d=document.getElementById("manualDialog");
+  if(!d) return;
+  ["manualTitle","manualAuthor","manualYear","manualISBN","manualSynopsis","manualGenre","manualNotes"].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.value="";
+  });
+  d.showModal();
+}
+
+function saveManualBook(){
+  const title=document.getElementById("manualTitle").value.trim();
+  if(!title){
+    alert("Please enter a book title.");
+    return;
+  }
+  const book={
+    title,
+    author:document.getElementById("manualAuthor").value.trim() || "Unknown author",
+    year:document.getElementById("manualYear").value.trim() || "",
+    isbn:document.getElementById("manualISBN").value.trim(),
+    synopsis:document.getElementById("manualSynopsis").value.trim(),
+    genre:document.getElementById("manualGenre").value.trim(),
+    notes:document.getElementById("manualNotes").value.trim(),
+    cover:""
+  };
+  books.unshift(book);
+  save();
+  manualDialog.close();
+  switchTab("collection", document.querySelectorAll(".tab")[3]);
+  render();
+}
+
+function showTitleSearch(){
+  const panel = document.getElementById("titleSearchPanel");
+  panel.style.display = panel.style.display === "none" ? "block" : "none";
+}
+
+async function startBookScanner(){
+  const panel = document.getElementById("scannerPanel");
+  const status = document.getElementById("scanStatus");
+  panel.style.display = "block";
+  status.textContent = "Starting camera…";
+
+  if(!window.Html5Qrcode){
+    status.textContent = "The scanner library could not load. Try again with an internet connection.";
+    return;
+  }
+
+  if(scannerRunning) return;
+
+  bookScanner = new Html5Qrcode("reader");
+  try{
+    await bookScanner.start(
+      { facingMode: { exact: "environment" } },
+      {
+        fps: 10,
+        qrbox: { width: 280, height: 160 },
+        formatsToSupport: [
+          Html5QrcodeSupportedFormats.EAN_13,
+          Html5QrcodeSupportedFormats.EAN_8,
+          Html5QrcodeSupportedFormats.UPC_A,
+          Html5QrcodeSupportedFormats.UPC_E
+        ]
+      },
+      async decodedText => {
+        if(scannerRunning){
+          scannerRunning = false;
+          status.textContent = "ISBN found! Looking up the book…";
+          try { await bookScanner.stop(); } catch(e) {}
+          await addBookFromISBN(decodedText);
+        }
+      },
+      () => {}
+    );
+    scannerRunning = true;
+    status.textContent = "Point the camera at the ISBN barcode on the back of the book.";
+  }catch(e){
+    scannerRunning = false;
+    status.textContent = "Camera access was not available. Please allow camera access in Safari and try again.";
+  }
+}
+
+async function stopBookScanner(){
+  if(bookScanner && scannerRunning){
+    try { await bookScanner.stop(); } catch(e) {}
+  }
+  scannerRunning = false;
+  document.getElementById("scannerPanel").style.display = "none";
+  document.getElementById("reader").innerHTML = "";
+}
+
+
+
+async function getBestBookCover({isbn="", title="", author=""}={}){
+  const normalize = s => (s || "").trim();
+  try{
+    const q = isbn
+      ? "isbn:" + encodeURIComponent(isbn)
+      : "intitle:" + encodeURIComponent(title) + (author ? "+inauthor:" + encodeURIComponent(author) : "");
+    const r = await fetch("https://www.googleapis.com/books/v1/volumes?q="+q+"&maxResults=8");
+    if(r.ok){
+      const data = await r.json();
+      const item = (data.items || []).find(v => v.volumeInfo?.imageLinks) || data.items?.[0];
+      const links = item?.volumeInfo?.imageLinks;
+      if(links){
+        const candidates = [
+          links.extraLarge, links.large, links.medium, links.small,
+          links.thumbnail, links.smallThumbnail
+        ].filter(Boolean);
+        if(candidates.length){
+          // Prefer the largest source supplied by Google Books and remove the
+          // HTTP scheme so browsers can upgrade it to HTTPS.
+          return candidates[0].replace(/^http:/,"https:");
+        }
+      }
+    }
+  }catch(e){}
+
+  try{
+    if(isbn){
+      // Open Library's -L endpoint returns a large cover when available.
+      return "https://covers.openlibrary.org/b/isbn/"+encodeURIComponent(isbn)+"-L.jpg?default=false";
+    }
+    const q = encodeURIComponent(normalize(title));
+    const r = await fetch("https://openlibrary.org/search.json?title="+q+"&limit=5");
+    if(r.ok){
+      const data=await r.json();
+      const d=data.docs?.find(x=>x.cover_i);
+      if(d?.cover_i) return "https://covers.openlibrary.org/b/id/"+d.cover_i+"-L.jpg";
+    }
+  }catch(e){}
+  return "";
+}
+
+async function getBestSynopsis({isbn="", title="", author=""}={}){
+  const clean = s => (s || "").replace(/<[^>]*>/g," ").replace(/\s+/g," ").trim();
+  // Google Books often has a fuller publisher description.
+  try{
+    const q = isbn
+      ? "isbn:" + encodeURIComponent(isbn)
+      : "intitle:" + encodeURIComponent(title) + (author ? "+inauthor:" + encodeURIComponent(author) : "");
+    const r = await fetch("https://www.googleapis.com/books/v1/volumes?q="+q+"&maxResults=5");
+    if(r.ok){
+      const data = await r.json();
+      const item = (data.items || []).find(v => clean(v.volumeInfo?.description).length >= 80) || data.items?.[0];
+      if(item){
+        const info=item.volumeInfo || {};
+        const desc=clean(info.description);
+        if(desc) return desc;
+      }
+    }
+  }catch(e){}
+
+  // Open Library is the fallback.
+  try{
+    const q = isbn ? "isbn:"+encodeURIComponent(isbn) : encodeURIComponent(title + (author ? " " + author : ""));
+    const r = await fetch("https://openlibrary.org/search.json?q="+q+"&limit=5");
+    if(r.ok){
+      const data=await r.json();
+      const d=data.docs?.[0];
+      if(d?.key){
+        const wr=await fetch("https://openlibrary.org"+d.key.replace("/books/","/works/")+".json");
+        if(wr.ok){
+          const w=await wr.json();
+          const desc=clean(typeof w.description==="string" ? w.description : w.description?.value);
+          if(desc) return desc;
+        }
+      }
+    }
+  }catch(e){}
+  return "";
+}
+
+async function addBookFromISBN(raw){
+  const isbn = String(raw).replace(/[^0-9Xx]/g,"");
+  const status = document.getElementById("scanStatus");
+  if(!isbn){
+    status.textContent = "That barcode did not contain an ISBN. Try another barcode.";
+    return;
+  }
+
+  try{
+    // Open Library supports ISBN lookups through its Search API.
+    const url = "https://openlibrary.org/search.json?q=isbn:"+encodeURIComponent(isbn)+"&limit=5";
+    const response = await fetch(url);
+    if(!response.ok) throw new Error("lookup failed");
+    const data = await response.json();
+
+    if(!data.docs || !data.docs.length){
+      status.textContent = "I couldn't find that ISBN. Try scanning the barcode again.";
+      scannerRunning = false;
+      return;
+    }
+
+    const d = data.docs[0];
+    const title = d.title || "Untitled";
+    const author = (d.author_name || ["Unknown author"])[0];
+    const year = d.first_publish_year || "";
+    const coverUrl = await getBestBookCover({isbn, title, author});
+    const key = d.key || "";
+
+    if(books.some(x => x.isbn === isbn || (key && x.key === key))){
+      status.textContent = "You already have this book in your collection! 📚";
+      return;
+    }
+
+    const synopsis = await getBestSynopsis({isbn, title, author});
+
+    books.unshift({key,title,author,year,cover:coverUrl,isbn,synopsis});
+    save();
+    stopBookScanner();
+    switchTab("collection", document.querySelectorAll(".tab")[3]);
+    showDetails(0);
+  }catch(e){
+    status.textContent = "I couldn't look up that book right now. Check your internet connection and try again.";
+  }
+}
+
+async function searchBooks(){
+  const q=document.getElementById("search").value.trim();
+  const results=document.getElementById("results"), status=document.getElementById("searchStatus");
+  if(!q){status.textContent="Type a title, author, or ISBN first.";results.innerHTML="";return;}
+  status.textContent="Searching…"; results.innerHTML="";
+  try{
+    const r=await fetch("https://openlibrary.org/search.json?q="+encodeURIComponent(q)+"&limit=12");
+    if(!r.ok) throw new Error();
+    const data=await r.json();
+    if(!data.docs?.length){status.textContent="No books found.";return;}
+    status.textContent=`Found ${data.numFound.toLocaleString()} result(s). Showing the first ${data.docs.length}.`;
+    results.innerHTML=data.docs.map((d,i)=>{
+      const title=d.title||"Untitled", author=(d.author_name||["Unknown author"])[0], year=d.first_publish_year||"";
+      const coverUrl=d.cover_i?`https://covers.openlibrary.org/b/id/${d.cover_i}-M.jpg`:"";
+      return `<div class="result">
+        <img src="${coverUrl}" onerror="this.style.display='none'">
+        <div class="result-info"><strong>${escapeHTML(title)}</strong><small>${escapeHTML(author)}${year?" • "+year:""}</small></div>
+        <button class="primary" onclick='addFromSearch(${JSON.stringify({key:d.key,title,author,year,cover:coverUrl,isbn:(d.isbn||[])[0]||"",synopsis:""}).replace(/'/g,"&#39;")})'>Add</button>
+      </div>`;
+    }).join("");
+  }catch(e){status.textContent="Could not search right now. You can still add books manually.";}
+}
+async function addFromSearch(b){
+  if(books.some(x=>x.key===b.key)){alert("That book is already in your collection.");return;}
+  b.synopsis = await getBestSynopsis({isbn:b.isbn||"", title:b.title||"", author:b.author||""});
+  books.unshift(b); save();
+  switchTab("collection", document.querySelectorAll(".tab")[3]);
+  showDetails(0);
+}
+function showDetails(i){
+  const b=books[i];
+  document.getElementById("details").innerHTML=`
+    <div class="modal-top">
+      <div class="modal-cover">${cover(b.cover,b.title)}</div>
+      <div>
+        <div class="label">Book</div><h2>${escapeHTML(b.title)}</h2>
+        <p><strong>${escapeHTML(b.author||"Unknown author")}</strong></p>
+        <p><span class="label">Published</span><br>${escapeHTML(b.year||"Unknown")}</p>
+        ${b.isbn?`<p><span class="label">ISBN</span><br>${escapeHTML(b.isbn)}</p>`:""}
+      </div>
+    </div>
+    <hr style="border:0;border-top:1px solid var(--line);margin:22px 0">
+    <div class="label">Synopsis</div>
+    <p class="synopsis">${escapeHTML(b.synopsis||"No synopsis is available for this edition. You can add one by using the manual-add option.")}</p>
+  `;
+  detailsDialog.showModal();
+}
+function removeBook(i){if(confirm("Remove this book from your collection?")){books.splice(i,1);save();}}
+let pendingPhoto = "";
+
+function openCamera(){
+  document.getElementById("cameraInput").click();
+}
+
+function handleBookPhoto(event){
+  const file = event.target.files && event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    pendingPhoto = e.target.result;
+    const preview = document.getElementById("photoPreview");
+    if(preview){
+      preview.innerHTML = `<img src="${pendingPhoto}" alt="Book photo preview" style="max-width:180px;max-height:240px;border-radius:12px;object-fit:cover;box-shadow:0 8px 20px rgba(79,52,112,.12)">`;
+    }
+    showManual();
+  };
+  reader.readAsDataURL(file);
+}
+
+function showManual(){
+  document.getElementById("manualDialog").showModal();
+}
+function addManual(){
+  const title=document.getElementById("manualTitle").value.trim();
+  if(!title){alert("Please enter a title.");return;}
+  books.unshift({
+    key:"manual-"+Date.now(),title,
+    author:document.getElementById("manualAuthor").value.trim(),
+    year:document.getElementById("manualYear").value.trim(),
+    synopsis:document.getElementById("manualSynopsis").value.trim(),
+    cover:pendingPhoto
+  });
+  ["manualTitle","manualAuthor","manualYear","manualSynopsis"].forEach(id=>document.getElementById(id).value="");
+  pendingPhoto = "";
+  document.getElementById("photoPreview").textContent = "No photo selected.";
+  document.getElementById("cameraInput").value = "";
+  manualDialog.close(); save();
+  switchTab("collection", document.querySelectorAll(".tab")[3]);
+}
+
+async function catalogSearchBooks(){
+  const q=document.getElementById("catalogSearch").value.trim();
+  const results=document.getElementById("catalogResults");
+  const status=document.getElementById("catalogStatus");
+  if(!q){
+    status.textContent="Type a book title or author first.";
+    results.innerHTML="";
+    return;
+  }
+
+  status.textContent="Searching the catalog…";
+  results.innerHTML="";
+
+  try{
+    const r=await fetch("https://openlibrary.org/search.json?q="+encodeURIComponent(q)+"&limit=12");
+    if(!r.ok) throw new Error();
+    const data=await r.json();
+
+    if(!data.docs?.length){
+      status.textContent="No books found. Try another title or author.";
+      return;
+    }
+
+    status.textContent=`Found ${data.numFound.toLocaleString()} result(s).`;
+    results.innerHTML=data.docs.map((d,i)=>{
+      const title=d.title||"Untitled";
+      const author=(d.author_name||["Unknown author"])[0];
+      const year=d.first_publish_year||"Unknown";
+      const coverUrl=d.cover_i?`https://covers.openlibrary.org/b/id/${d.cover_i}-L.jpg`:"";
+      const key=d.key||"";
+      return `
+        <article class="book-card">
+          <div class="cover">${coverUrl ? `<img src="${coverUrl}" alt="Cover of ${escapeHTML(title)}" onerror="this.parentElement.innerHTML='📖'">` : "📖"}</div>
+          <div class="book-info">
+            <h3>${escapeHTML(title)}</h3>
+            <div class="author">${escapeHTML(author)}</div>
+            <div class="meta">First published: ${escapeHTML(year)}</div>
+            <div class="actions">
+              <button class="primary" onclick='catalogDetails(${JSON.stringify({key,title,author,year,cover:coverUrl}).replace(/'/g,"&#39;")})'>View Details</button>
+            </div>
+          </div>
+        </article>`;
+    }).join("");
+  }catch(e){
+    status.textContent="The catalog couldn't be reached right now. Please try again.";
+  }
+}
+
+async function catalogDetails(book){
+  let synopsis=await getBestSynopsis({isbn:book.isbn||"", title:book.title||"", author:book.author||"");
+  if(!synopsis) synopsis="No synopsis is available for this title.";
+
+  document.getElementById("details").innerHTML=`
+    <div class="modal-top">
+      <div class="modal-cover">${cover(book.cover,book.title)}</div>
+      <div>
+        <div class="label">Catalog Book</div>
+        <h2>${escapeHTML(book.title)}</h2>
+        <p><strong>${escapeHTML(book.author)}</strong></p>
+        <p><span class="label">First Published</span><br>${escapeHTML(book.year)}</p>
+      </div>
+    </div>
+    <hr style="border:0;border-top:1px solid var(--line);margin:22px 0">
+    <div class="label">Synopsis</div>
+    <p class="synopsis">${escapeHTML(synopsis)}</p>
+  `;
+  detailsDialog.showModal();
+}
+
+function switchTab(id, button){
+  document.querySelectorAll(".tab-panel").forEach(panel=>panel.classList.remove("active"));
+  document.querySelectorAll(".tab").forEach(tab=>tab.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  button.classList.add("active");
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+document.getElementById("search").addEventListener("keydown",e=>{if(e.key==="Enter")searchBooks();});
+document.getElementById("catalogSearch").addEventListener("keydown",e=>{if(e.key==="Enter")catalogSearchBooks();});
+render();
+</script>
+</body>
+</html>
