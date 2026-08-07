@@ -141,6 +141,7 @@
   transition: transform .2s ease;
 }
 </style>
+  
 </head>
 <body>
 <header>
@@ -208,7 +209,7 @@
   <section id="collection" class="tab-panel">
   <section class="panel">
     <h2>📚 Your books</h2>
-    <div id="collection" class="books"></div>
+    <div id="collectionBooks" class="books"></div>
   </section>
   </section>
 </main>
@@ -258,7 +259,7 @@ function render(){
   document.getElementById("remaining").textContent=Math.max(0,1000-n).toLocaleString();
   document.getElementById("percent").textContent=pct.toFixed(n>=1000?0:1)+"%";
   document.getElementById("progress").style.width=pct+"%";
-  const c=document.getElementById("collection");
+  const c=document.getElementById("collectionBooks");
   if(!n){c.innerHTML='<div class="empty">You haven’t added any books yet. Search for a book above to get started!</div>';return;}
   c.innerHTML=books.map((b,i)=>`
     <article class="book-card">
